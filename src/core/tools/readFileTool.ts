@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import type { ToolResult } from "../../types";
+import { loadConfig } from "../config";
 
 export interface ReadFileOptions {
   absolutePath: string;
@@ -28,10 +29,45 @@ export interface ReadFileResult {
   };
 }
 
+function isBlockedPath(filePath: string, rootPath: string): string | null {
+  const config = loadConfig(rootPath);
+  const patterns = config.guardrails?.blockReadPatterns ?? [];
+  if (patterns.length === 0) return null;
+
+  const base = path.basename(filePath);
+
+  for (const pattern of patterns) {
+    // exact match 
+    if (pattern === base) {
+      return `Reading blocked for "${base}" by guardrails.`;
+    }
+    // prefix wildcard 
+    if (pattern.startsWith(".") && pattern.endsWith(".*")) {
+      const prefix = pattern.slice(0, -2);
+      if (base.startsWith(prefix)) {
+        return `Reading blocked for "${base}" by guardrails.`;
+      }
+    }
+    // extension wildcard 
+    if (pattern.startsWith("*.")) {
+      const ext = pattern.slice(1);
+      if (base.endsWith(ext)) {
+        return `Reading blocked for "${base}" by guardrails.`;
+      }
+    }
+  }
+  return null;
+}
+
 export function readFile(
   options: ReadFileOptions,
   rootPath: string
 ): ToolResult {
+  const blocked = isBlockedPath(options.absolutePath, rootPath);
+  if (blocked) {
+    return { DisplayResult: "Blocked", LLMresult: blocked };
+  }
+
   const { absolutePath, startLine, endLine } = options;
   const validation = validateFileForReading(absolutePath);
   if (validation) {
