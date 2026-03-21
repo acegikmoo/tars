@@ -37,15 +37,14 @@ export async function grepTool(options: GrepOptions): Promise<ToolResult> {
 
       lines.forEach((line, idx) => {
         if (searchRegex.test(line)) {
-          matches.push({ 
-            filePath, 
-            lineNumber: idx + 1, 
-            line: line.trim() 
+          matches.push({
+            filePath,
+            lineNumber: idx + 1,
+            line: line.trim(),
           });
         }
       });
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   function walkDir(dir: string): void {
@@ -53,7 +52,10 @@ export async function grepTool(options: GrepOptions): Promise<ToolResult> {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
 
       for (const entry of entries) {
-        if (entry.isDirectory() && (entry.name === 'node_modules' || entry.name.startsWith('.'))) {
+        if (
+          entry.isDirectory() &&
+          (entry.name === "node_modules" || entry.name.startsWith("."))
+        ) {
           continue;
         }
 
@@ -71,8 +73,7 @@ export async function grepTool(options: GrepOptions): Promise<ToolResult> {
           }
         }
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   try {
@@ -110,9 +111,10 @@ export async function grepTool(options: GrepOptions): Promise<ToolResult> {
     .map((m) => `${m.filePath}:${m.lineNumber}: ${m.line}`)
     .join("\n");
 
-  const displayMsg = matches.length > maxResults
-    ? `Found ${matches.length} matches (showing first ${maxResults})`
-    : `Found ${matches.length} match(es)`;
+  const displayMsg =
+    matches.length > maxResults
+      ? `Found ${matches.length} matches (showing first ${maxResults})`
+      : `Found ${matches.length} match(es)`;
 
   return {
     LLMresult: resultString,

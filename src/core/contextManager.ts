@@ -1,13 +1,18 @@
-import { BASE_PROMPT, EXAMPLES, TOOL_SELECTION_PROMPT, MODE_PROMPTS } from './prompt';
+import {
+  BASE_PROMPT,
+  EXAMPLES,
+  TOOL_SELECTION_PROMPT,
+  MODE_PROMPTS,
+} from "./prompt";
 import * as fs from "fs";
 import * as path from "path";
-import { toolRegistry } from './tools/toolRegistry';
-import { getFolderStructure } from './utils';
-import type { AgentMode } from '../types';
-import type { TarsConfig } from './config';
+import { toolRegistry } from "./tools/toolRegistry";
+import { getFolderStructure } from "./utils";
+import type { AgentMode } from "../types";
+import type { TarsConfig } from "./config";
 
 export interface Message {
-  role: 'user' | 'model';
+  role: "user" | "model";
   content: string;
   tokens?: number;
 }
@@ -34,29 +39,32 @@ export class ContextManager {
   private readonly gitIgnoreChecker: (path: string) => boolean | null;
   private conversations: Message[] = [];
   private projectState: ProjectState;
-  private mode: AgentMode = 'agent'; // default mode
+  private mode: AgentMode = "agent"; // default mode
   private summary: string | null = null;
   private pinnedFiles: Set<string> = new Set();
   private maxTokens = 20000;
 
-
-constructor(cwd: string, gitIgnoreChecker: (path: string) => boolean | null, config?: TarsConfig) {
-  this.gitIgnoreChecker = gitIgnoreChecker;
-  this.projectState = {
-    rootDir: cwd,
-    cwd,
-    fileTree: this.buildFileTree(cwd),
-  };
-  if (config?.features?.maxContextTokens) {
-    this.maxTokens = config.features.maxContextTokens;
+  constructor(
+    cwd: string,
+    gitIgnoreChecker: (path: string) => boolean | null,
+    config?: TarsConfig,
+  ) {
+    this.gitIgnoreChecker = gitIgnoreChecker;
+    this.projectState = {
+      rootDir: cwd,
+      cwd,
+      fileTree: this.buildFileTree(cwd),
+    };
+    if (config?.features?.maxContextTokens) {
+      this.maxTokens = config.features.maxContextTokens;
+    }
   }
-}
 
   // Called when AI uses a tool
   addResponse(response: string, toolCall: ToolCall) {
     const content = `Output of ${JSON.stringify(toolCall)}:\n${response}`;
     this.conversations.push({
-      role: 'model',
+      role: "model",
       content,
       tokens: estimateTokens(content),
     });
@@ -65,7 +73,7 @@ constructor(cwd: string, gitIgnoreChecker: (path: string) => boolean | null, con
   // Called when user types a message
   addUserMessage(query: string) {
     this.conversations.push({
-      role: 'user',
+      role: "user",
       content: query,
       tokens: estimateTokens(query),
     });
@@ -74,11 +82,13 @@ constructor(cwd: string, gitIgnoreChecker: (path: string) => boolean | null, con
   // This builds the full prompt sent to the LLM every turn
   buildPrompt(): string {
     return [
-      this.buildSystemSection(),    // base instructions + mode
+      this.buildSystemSection(), // base instructions + mode
       this.buildProjectStateSection(), // file tree
-      this.buildToolInfoSection(),  // available tools
+      this.buildToolInfoSection(), // available tools
       this.buildConversationSection(), // chat history
-    ].filter(Boolean).join('\n\n');
+    ]
+      .filter(Boolean)
+      .join("\n\n");
   }
 
   pinFile(filePath: string) {
@@ -109,7 +119,7 @@ constructor(cwd: string, gitIgnoreChecker: (path: string) => boolean | null, con
   getStats() {
     const totalTokens = this.conversations.reduce(
       (acc, msg) => acc + (msg.tokens ?? estimateTokens(msg.content)),
-      0
+      0,
     );
     return {
       messageCount: this.conversations.length,
@@ -126,7 +136,10 @@ constructor(cwd: string, gitIgnoreChecker: (path: string) => boolean | null, con
   }
 
   private buildFileTree(rootDir: string): string {
-    return getFolderStructure({ gitIgnoreChecker: this.gitIgnoreChecker, rootDir });
+    return getFolderStructure({
+      gitIgnoreChecker: this.gitIgnoreChecker,
+      rootDir,
+    });
   }
 
   // System section: base prompt + current mode instructions
@@ -134,32 +147,32 @@ constructor(cwd: string, gitIgnoreChecker: (path: string) => boolean | null, con
     return `${this.systemPrompt}\n\n${MODE_PROMPTS[this.mode]}`;
   }
 
-private buildProjectStateSection(): string {
-  const parts = [];
-  parts.push(`CWD: ${this.projectState.cwd}`);
-  parts.push(`File Tree: ${this.projectState.fileTree}`);
+  private buildProjectStateSection(): string {
+    const parts = [];
+    parts.push(`CWD: ${this.projectState.cwd}`);
+    parts.push(`File Tree: ${this.projectState.fileTree}`);
 
-  if (this.pinnedFiles.size > 0) {
-    parts.push('\n--- Pinned Files ---');
-    for (const filePath of this.pinnedFiles) {
-      try {
-        if (fs.existsSync(filePath)) {
-          const content = fs.readFileSync(filePath, 'utf-8');
-          const rel = path.relative(this.projectState.rootDir, filePath);
-          parts.push(`File: ${rel}\n\`\`\`\n${content}\n\`\`\``);
+    if (this.pinnedFiles.size > 0) {
+      parts.push("\n--- Pinned Files ---");
+      for (const filePath of this.pinnedFiles) {
+        try {
+          if (fs.existsSync(filePath)) {
+            const content = fs.readFileSync(filePath, "utf-8");
+            const rel = path.relative(this.projectState.rootDir, filePath);
+            parts.push(`File: ${rel}\n\`\`\`\n${content}\n\`\`\``);
+          }
+        } catch {
+          parts.push(`File: ${filePath} (error reading)`);
         }
-      } catch {
-        parts.push(`File: ${filePath} (error reading)`);
       }
     }
-  }
 
-  return parts.join('\n');
-}
+    return parts.join("\n");
+  }
 
   // Sliding window: only keep recent messages that fit in token budget
   private buildConversationSection(): string {
-    let section = '--- Conversation ---\n';
+    let section = "--- Conversation ---\n";
 
     if (this.summary) {
       section += `[EARLIER SUMMARY]: ${this.summary}\n\n`;

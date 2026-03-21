@@ -1,2 +1,2 @@
-export * from "./error"
-export * from "./getFolderStructure"
+export * from "./error";
+export * from "./getFolderStructure";

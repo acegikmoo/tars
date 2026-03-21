@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 
 export interface TarsConfig {
   llm: {
@@ -20,7 +20,7 @@ export interface TarsConfig {
 
 export const DEFAULT_CONFIG: TarsConfig = {
   llm: {
-    model: 'gemini-2.5-flash',
+    model: "gemini-2.5-flash",
   },
   features: {
     allowDangerous: false,
@@ -29,26 +29,26 @@ export const DEFAULT_CONFIG: TarsConfig = {
   },
   guardrails: {
     blockReadPatterns: [
-      '.env',
-      '.env.*',
-      '*.pem',
-      '*.key',
-      'id_rsa',
-      'id_ed25519',
-      '.npmrc',
+      ".env",
+      ".env.*",
+      "*.pem",
+      "*.key",
+      "id_rsa",
+      "id_ed25519",
+      ".npmrc",
     ],
   },
 };
 
 export function getConfigPath(rootDir: string) {
-  return path.join(rootDir, '.tars.json');
+  return path.join(rootDir, ".tars.json");
 }
 
 export function loadConfig(rootDir: string): TarsConfig {
   const configPath = getConfigPath(rootDir);
   if (!fs.existsSync(configPath)) return cloneConfig(DEFAULT_CONFIG);
   try {
-    const raw = fs.readFileSync(configPath, 'utf-8');
+    const raw = fs.readFileSync(configPath, "utf-8");
     const parsed = JSON.parse(raw);
     return mergeConfig(DEFAULT_CONFIG, parsed);
   } catch {
@@ -69,13 +69,21 @@ function mergeConfig(base: TarsConfig, overrides: any): TarsConfig {
       maxTokens: overrides?.llm?.maxTokens ?? base.llm.maxTokens,
     },
     features: {
-      fileTreeMaxDepth: overrides?.features?.fileTreeMaxDepth ?? base.features?.fileTreeMaxDepth,
-      maxContextTokens: overrides?.features?.maxContextTokens ?? base.features?.maxContextTokens,
-      allowDangerous: overrides?.features?.allowDangerous ?? base.features?.allowDangerous,
-      confirmEdits: overrides?.features?.confirmEdits ?? base.features?.confirmEdits,
+      fileTreeMaxDepth:
+        overrides?.features?.fileTreeMaxDepth ??
+        base.features?.fileTreeMaxDepth,
+      maxContextTokens:
+        overrides?.features?.maxContextTokens ??
+        base.features?.maxContextTokens,
+      allowDangerous:
+        overrides?.features?.allowDangerous ?? base.features?.allowDangerous,
+      confirmEdits:
+        overrides?.features?.confirmEdits ?? base.features?.confirmEdits,
     },
     guardrails: {
-      blockReadPatterns: overrides?.guardrails?.blockReadPatterns ?? base.guardrails?.blockReadPatterns,
+      blockReadPatterns:
+        overrides?.guardrails?.blockReadPatterns ??
+        base.guardrails?.blockReadPatterns,
     },
   };
 }

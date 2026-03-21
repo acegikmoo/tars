@@ -17,12 +17,12 @@ export interface ReadFileResult {
   path: string;
   error?: string;
   lineRange?: {
-    requested: { 
+    requested: {
       start?: number;
       end?: number;
     };
-    actual: { 
-      start: number; 
+    actual: {
+      start: number;
       end: number;
     };
     totalLines: number;
@@ -37,18 +37,18 @@ function isBlockedPath(filePath: string, rootPath: string): string | null {
   const base = path.basename(filePath);
 
   for (const pattern of patterns) {
-    // exact match 
+    // exact match
     if (pattern === base) {
       return `Reading blocked for "${base}" by guardrails.`;
     }
-    // prefix wildcard 
+    // prefix wildcard
     if (pattern.startsWith(".") && pattern.endsWith(".*")) {
       const prefix = pattern.slice(0, -2);
       if (base.startsWith(prefix)) {
         return `Reading blocked for "${base}" by guardrails.`;
       }
     }
-    // extension wildcard 
+    // extension wildcard
     if (pattern.startsWith("*.")) {
       const ext = pattern.slice(1);
       if (base.endsWith(ext)) {
@@ -61,7 +61,7 @@ function isBlockedPath(filePath: string, rootPath: string): string | null {
 
 export function readFile(
   options: ReadFileOptions,
-  rootPath: string
+  rootPath: string,
 ): ToolResult {
   const blocked = isBlockedPath(options.absolutePath, rootPath);
   if (blocked) {

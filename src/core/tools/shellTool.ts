@@ -1,6 +1,6 @@
-import { spawn, exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
+import { spawn, exec } from "child_process";
+import { promisify } from "util";
+import path from "path";
 
 const execPromise = promisify(exec);
 
@@ -22,9 +22,7 @@ export interface ShellResult {
   error?: string;
 }
 
-export async function execCommand(
-  options: ShellOptions
-): Promise<ShellResult> {
+export async function execCommand(options: ShellOptions): Promise<ShellResult> {
   const { command, directory, timeout = 30000 } = options;
 
   try {
@@ -44,9 +42,9 @@ export async function execCommand(
     const error = err as any;
 
     return {
-      stdout: error.stdout?.toString() ?? '',
-      stderr: error.stderr?.toString() ?? '',
-      exitCode: typeof error.code === 'number' ? error.code : null,
+      stdout: error.stdout?.toString() ?? "",
+      stderr: error.stderr?.toString() ?? "",
+      exitCode: typeof error.code === "number" ? error.code : null,
       success: false,
       error: error.message,
     };
@@ -55,39 +53,39 @@ export async function execCommand(
 
 export function spawnCommand(
   options: ShellOptions,
-  onOutput?: (data: string) => void
+  onOutput?: (data: string) => void,
 ): Promise<ShellResult> {
   const { command, directory, timeout } = options;
 
   return new Promise((resolve) => {
-    const child = spawn('bash', ['-c', command], {
+    const child = spawn("bash", ["-c", command], {
       cwd: resolveCwd(directory),
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ["ignore", "pipe", "pipe"],
     });
 
-    let stdout = '';
-    let stderr = '';
+    let stdout = "";
+    let stderr = "";
     let timeoutId: NodeJS.Timeout | undefined;
 
     if (timeout) {
       timeoutId = setTimeout(() => {
-        child.kill('SIGTERM');
+        child.kill("SIGTERM");
       }, timeout);
     }
 
-    child.stdout?.on('data', (data) => {
+    child.stdout?.on("data", (data) => {
       const output = data.toString();
       stdout += output;
       onOutput?.(output);
     });
 
-    child.stderr?.on('data', (data) => {
+    child.stderr?.on("data", (data) => {
       const output = data.toString();
       stderr += output;
       onOutput?.(output);
     });
 
-    child.on('close', (code, signal) => {
+    child.on("close", (code, signal) => {
       if (timeoutId) clearTimeout(timeoutId);
 
       resolve({
@@ -97,12 +95,12 @@ export function spawnCommand(
         success: code === 0,
         error:
           code !== 0
-            ? `Command exited with code ${code}${signal ? ` (signal: ${signal})` : ''}`
+            ? `Command exited with code ${code}${signal ? ` (signal: ${signal})` : ""}`
             : undefined,
       });
     });
 
-    child.on('error', (error) => {
+    child.on("error", (error) => {
       if (timeoutId) clearTimeout(timeoutId);
 
       resolve({

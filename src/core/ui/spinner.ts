@@ -1,13 +1,13 @@
-import chalk from 'chalk';
+import chalk from "chalk";
 
 export class StreamingSpinner {
   private interval: NodeJS.Timeout | null = null;
-  private readonly frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  private readonly frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
   private frameIndex = 0;
-  private text = '';
+  private text = "";
   private active = false;
 
-  start(initialText = 'Processing...') {
+  start(initialText = "Processing...") {
     if (this.active) return;
 
     this.text = initialText;
@@ -34,23 +34,23 @@ export class StreamingSpinner {
     }
 
     this.active = false;
-    process.stdout.write('\r\x1b[K');
+    process.stdout.write("\r\x1b[K");
   }
 
-  succeed(text = 'Success!') {
+  succeed(text = "Success!") {
     this.stop();
     console.log(chalk.green(text));
   }
 
-  fail(text = 'Failed!') {
+  fail(text = "Failed!") {
     this.stop();
     console.log(chalk.red(text));
   }
 
   private render() {
-    process.stdout.write('\r\x1b[K');
+    process.stdout.write("\r\x1b[K");
     process.stdout.write(
-      chalk.cyan(`${this.frames[this.frameIndex]} ${this.text}`)
+      chalk.cyan(`${this.frames[this.frameIndex]} ${this.text}`),
     );
   }
 }

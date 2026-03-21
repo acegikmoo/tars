@@ -5,6 +5,6 @@ export function getErrorMessage(error: unknown): string {
   try {
     return String(error);
   } catch {
-    return 'Failed to get error details';
+    return "Failed to get error details";
   }
 }

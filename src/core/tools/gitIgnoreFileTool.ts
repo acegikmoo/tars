@@ -1,28 +1,28 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 
 interface GitIgnoreChecker {
   (filePath: string): boolean;
 }
 
 export function createGitIgnoreChecker(rootDir: string): GitIgnoreChecker {
-  const gitignorePath = path.join(rootDir, '.gitignore');
+  const gitignorePath = path.join(rootDir, ".gitignore");
 
   if (!fs.existsSync(gitignorePath)) {
     return () => false;
   }
 
   try {
-    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    const gitignoreContent = fs.readFileSync(gitignorePath, "utf-8");
     const patterns = parseGitIgnorePatterns(gitignoreContent);
     const regexPatterns = patterns.map((pattern) =>
-      createRegexFromGitIgnorePattern(pattern)
+      createRegexFromGitIgnorePattern(pattern),
     );
 
     return (filePath: string): boolean => {
       const normalizedPath = path.relative(
         rootDir,
-        path.resolve(rootDir, filePath)
+        path.resolve(rootDir, filePath),
       );
 
       return regexPatterns.some((regex) => regex.test(normalizedPath));
@@ -35,35 +35,35 @@ export function createGitIgnoreChecker(rootDir: string): GitIgnoreChecker {
 
 function parseGitIgnorePatterns(content: string): string[] {
   return content
-    .split('\n')
+    .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith('#'))
-    .filter((line) => !line.startsWith('!'));
+    .filter((line) => line.length > 0 && !line.startsWith("#"))
+    .filter((line) => !line.startsWith("!"));
 }
 
 function createRegexFromGitIgnorePattern(pattern: string): RegExp {
-  const isAbsolute = pattern.startsWith('/');
+  const isAbsolute = pattern.startsWith("/");
   if (isAbsolute) {
     pattern = pattern.slice(1);
   }
 
   let regexPattern = pattern
-    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-    .replace(/\*\*/g, '§DOUBLESTAR§')
-    .replace(/\*/g, '[^/]*')
-    .replace(/§DOUBLESTAR§/g, '.*')
-    .replace(/\?/g, '[^/]');
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*\*/g, "§DOUBLESTAR§")
+    .replace(/\*/g, "[^/]*")
+    .replace(/§DOUBLESTAR§/g, ".*")
+    .replace(/\?/g, "[^/]");
 
-  if (pattern.endsWith('/')) {
-    regexPattern = regexPattern.slice(0, -1) + '(/.*)?$';
+  if (pattern.endsWith("/")) {
+    regexPattern = regexPattern.slice(0, -1) + "(/.*)?$";
   } else {
-    regexPattern += '(/.*)?$';
+    regexPattern += "(/.*)?$";
   }
 
-  if (isAbsolute || pattern.includes('/')) {
-    regexPattern = '^' + regexPattern;
+  if (isAbsolute || pattern.includes("/")) {
+    regexPattern = "^" + regexPattern;
   } else {
-    regexPattern = '(^|/)' + regexPattern;
+    regexPattern = "(^|/)" + regexPattern;
   }
 
   return new RegExp(regexPattern);

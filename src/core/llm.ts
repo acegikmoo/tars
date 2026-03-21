@@ -16,10 +16,10 @@ export class LLM {
     console.error(chalk.red("Missing API Key!\n"));
     console.error(chalk.yellow("Please set your Google AI API key:\n"));
     console.error(
-      chalk.cyan("export GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here\n")
+      chalk.cyan("export GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here\n"),
     );
     console.error(
-      chalk.blue("Get your API key at: https://aistudio.google.com/app/apikey")
+      chalk.blue("Get your API key at: https://aistudio.google.com/app/apikey"),
     );
 
     process.exit(1);
@@ -27,7 +27,7 @@ export class LLM {
 
   async streamResponse(
     prompt: string,
-    onChunk?: (chunk: string) => void
+    onChunk?: (chunk: string) => void,
   ): Promise<string> {
     try {
       const { textStream } = streamText({
@@ -54,12 +54,8 @@ export class LLM {
 
     if (msg.includes("api key") || msg.includes("authentication")) {
       console.error(chalk.red("\nAuthentication Error!"));
-      console.error(
-        chalk.yellow("Please verify your Google AI API key.")
-      );
-      console.error(
-        chalk.blue("https://aistudio.google.com/app/apikey")
-      );
+      console.error(chalk.yellow("Please verify your Google AI API key."));
+      console.error(chalk.blue("https://aistudio.google.com/app/apikey"));
       process.exit(1);
     }
   }

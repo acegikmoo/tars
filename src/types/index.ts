@@ -1,5 +1,5 @@
 export interface ToolResult {
-  LLMresult: string,
+  LLMresult: string;
   DisplayResult: string;
 }
 

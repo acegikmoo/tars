@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-interface getFolderStructureType { 
+interface getFolderStructureType {
   gitIgnoreChecker: (filePath: string) => boolean | null;
   rootDir: string;
 }
@@ -26,20 +26,20 @@ export function getFolderStructure({
 }
 
 function buildTree(
-  dirPath: string, 
+  dirPath: string,
   gitIgnoreChecker: (filePath: string) => boolean | null,
-  basePath?: string
+  basePath?: string,
 ): TreeNode[] {
   const baseDir = basePath || dirPath;
   const nodes: TreeNode[] = [];
 
   try {
-    const items = fs.readdirSync(dirPath, { withFileTypes: true});
+    const items = fs.readdirSync(dirPath, { withFileTypes: true });
 
     items.sort((a, b) => {
       if (a.isDirectory() && !b.isDirectory()) return -1;
-      if (!a.isDirectory() && b.isDirectory()) return 1
-        return a.name.localeCompare(b.name)
+      if (!a.isDirectory() && b.isDirectory()) return 1;
+      return a.name.localeCompare(b.name);
     });
 
     for (const item of items) {
@@ -61,9 +61,8 @@ function buildTree(
 
       nodes.push(node);
     }
-  } catch(error) {
+  } catch (error) {
     console.warn(`Warning: Could not read directory ${dirPath}: ${error}`);
-    
   }
   return nodes;
 }
@@ -72,21 +71,21 @@ function formatTree(
   nodes: TreeNode[],
   rootDir: string,
   prefix: string = "",
-  isLast: boolean = true
+  isLast: boolean = true,
 ): string {
   let result = "";
 
-  if (prefix === '') {
+  if (prefix === "") {
     result += `${path.basename(rootDir)}/\n`;
   }
 
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i]!;
     const isLastNode = i === nodes.length - 1;
-    const currentPrefix = isLastNode ? '└───' : '├───';
-    const nextPrefix = prefix + (isLastNode ? '    ' : '│   ');
+    const currentPrefix = isLastNode ? "└───" : "├───";
+    const nextPrefix = prefix + (isLastNode ? "    " : "│   ");
 
-    result += `${prefix}${currentPrefix}${node.name}${node.isDirectory ? '/' : ''}\n`;
+    result += `${prefix}${currentPrefix}${node.name}${node.isDirectory ? "/" : ""}\n`;
 
     if (node.isDirectory && node.children && node.children.length > 0) {
       result += formatTree(node.children, rootDir, nextPrefix, isLastNode);

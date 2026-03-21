@@ -1,10 +1,10 @@
-import type { ToolResult } from '../../types';
-import { z } from 'zod';
-import { readFile } from './readFileTool';
-import { editFile } from './editTool';
-import { createNewFile } from './newFileTool';
-import { globFiles } from './globTool';
-import { grepTool } from './grepTool';
+import type { ToolResult } from "../../types";
+import { z } from "zod";
+import { readFile } from "./readFileTool";
+import { editFile } from "./editTool";
+import { createNewFile } from "./newFileTool";
+import { globFiles } from "./globTool";
+import { grepTool } from "./grepTool";
 
 export interface LLMConfig {
   model: string;
@@ -18,7 +18,7 @@ export interface configType {
   gitIgnoreChecker: (path: string) => boolean;
 }
 
-export type ToolCall = 
+export type ToolCall =
   | z.infer<typeof ReadFileSchema>
   | z.infer<typeof EditFileSchema>
   | z.infer<typeof NewFileSchema>
@@ -33,7 +33,7 @@ export interface ValidationResult {
 }
 
 export const ReadFileSchema = z.object({
-  tool: z.literal('read_file'),
+  tool: z.literal("read_file"),
   toolOptions: z.object({
     absolutePath: z.string().min(1, "File path cannot be empty"),
     startLine: z.number().int().min(1, "Line numbers start at 1").optional(),
@@ -47,7 +47,11 @@ export const EditFileSchema = z.object({
     filePath: z.string().min(1, "File path cannot be empty"),
     oldString: z.string().min(1, "oldString cannot be empty"),
     newString: z.string(),
-    expected_replacements: z.number().int().min(1, "Must replace at least 1 occurrence").optional(),
+    expected_replacements: z
+      .number()
+      .int()
+      .min(1, "Must replace at least 1 occurrence")
+      .optional(),
   }),
 });
 
@@ -75,37 +79,40 @@ export const GlobSchema = z.object({
   }),
 });
 
-function createSuccessResult(data: ToolCall, result: ToolResult): ValidationResult {
+function createSuccessResult(
+  data: ToolCall,
+  result: ToolResult,
+): ValidationResult {
   return { success: true, data, result };
 }
 
 function createErrorResult(error: string): ValidationResult {
   return { success: false, error };
-} 
+}
 
 export async function validateAndRunTool(
   jsonData: unknown,
   config: configType,
-  rootPath: string
+  rootPath: string,
 ): Promise<ValidationResult> {
   try {
     if (!jsonData || typeof jsonData !== "object" || !("tool" in jsonData)) {
       return createErrorResult(
         'Invalid tool call format. Expected object with "tool" property. ' +
-        'Example: { tool: "read_file", toolOptions: { ... } }'
+          'Example: { tool: "read_file", toolOptions: { ... } }',
       );
     }
 
     const data = jsonData as any;
 
     switch (data.tool) {
-      case "read_file": 
+      case "read_file":
         return await handleReadFile(data, rootPath);
 
-      case "edit_file": 
+      case "edit_file":
         return await handleEditFile(data);
 
-      case "new_file": 
+      case "new_file":
         return await handleNewFile(data);
 
       case "grep":
@@ -114,24 +121,27 @@ export async function validateAndRunTool(
       case "glob":
         return await handleGlob(data, config);
 
-      default: 
+      default:
         return createErrorResult(
-          `Unknown tool: "${data.tool}". Supported tools: read_file, edit_file, new_file, grep, glob`
+          `Unknown tool: "${data.tool}". Supported tools: read_file, edit_file, new_file, grep, glob`,
         );
     }
   } catch (error) {
     return createErrorResult(
-      `Unexpected error during tool validation: ${error instanceof Error ? error.message : String(error)}`
+      `Unexpected error during tool validation: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
 
-async function handleReadFile(data: any, rootPath: string): Promise<ValidationResult> {
+async function handleReadFile(
+  data: any,
+  rootPath: string,
+): Promise<ValidationResult> {
   const parsed = ReadFileSchema.safeParse(data);
 
   if (!parsed.success) {
     return createErrorResult(
-      `Invalid read_file options: ${formatZodError(parsed.error)}`
+      `Invalid read_file options: ${formatZodError(parsed.error)}`,
     );
   }
 
@@ -140,28 +150,30 @@ async function handleReadFile(data: any, rootPath: string): Promise<ValidationRe
   if (startLine !== undefined && endLine !== undefined) {
     if (startLine > endLine) {
       return createErrorResult(
-        `Invalid line range: startLine (${startLine}) cannot be greater than endLine (${endLine})`
+        `Invalid line range: startLine (${startLine}) cannot be greater than endLine (${endLine})`,
       );
     }
   }
 
-  if ((startLine !== undefined && endLine === undefined) || 
-      (startLine === undefined && endLine !== undefined)) {
+  if (
+    (startLine !== undefined && endLine === undefined) ||
+    (startLine === undefined && endLine !== undefined)
+  ) {
     return createErrorResult(
-      "Both startLine and endLine must be provided together, or neither"
+      "Both startLine and endLine must be provided together, or neither",
     );
-  } 
-  
+  }
+
   const result = readFile(parsed.data.toolOptions, rootPath);
   return createSuccessResult(parsed.data, result);
 }
 
 async function handleEditFile(data: any): Promise<ValidationResult> {
   const parsed = EditFileSchema.safeParse(data);
-  
+
   if (!parsed.success) {
     return createErrorResult(
-      `Invalid edit_file options: ${formatZodError(parsed.error)}`
+      `Invalid edit_file options: ${formatZodError(parsed.error)}`,
     );
   }
 
@@ -176,10 +188,10 @@ async function handleEditFile(data: any): Promise<ValidationResult> {
 
 async function handleNewFile(data: any): Promise<ValidationResult> {
   const parsed = NewFileSchema.safeParse(data);
-  
+
   if (!parsed.success) {
     return createErrorResult(
-      `Invalid new_file options: ${formatZodError(parsed.error)}`
+      `Invalid new_file options: ${formatZodError(parsed.error)}`,
     );
   }
 
@@ -187,16 +199,19 @@ async function handleNewFile(data: any): Promise<ValidationResult> {
     filePath: parsed.data.toolOptions.filePath,
     content: parsed.data.toolOptions.content,
   });
-  
+
   return createSuccessResult(parsed.data, result);
 }
 
-async function handleGrep(data: any, config: configType): Promise<ValidationResult> {
+async function handleGrep(
+  data: any,
+  config: configType,
+): Promise<ValidationResult> {
   const parsed = GrepSchema.safeParse(data);
-  
+
   if (!parsed.success) {
     return createErrorResult(
-      `Invalid grep options: ${formatZodError(parsed.error)}`
+      `Invalid grep options: ${formatZodError(parsed.error)}`,
     );
   }
 
@@ -205,30 +220,33 @@ async function handleGrep(data: any, config: configType): Promise<ValidationResu
     path: parsed.data.toolOptions.path,
     include: parsed.data.toolOptions.include,
   });
-  
+
   return createSuccessResult(parsed.data, result);
 }
 
-async function handleGlob(data: any, config: configType): Promise<ValidationResult> {
+async function handleGlob(
+  data: any,
+  config: configType,
+): Promise<ValidationResult> {
   const parsed = GlobSchema.safeParse(data);
-  
+
   if (!parsed.success) {
     return createErrorResult(
-      `Invalid glob options: ${formatZodError(parsed.error)}`
+      `Invalid glob options: ${formatZodError(parsed.error)}`,
     );
   }
 
   const result = await globFiles(
     { pattern: parsed.data.toolOptions.pattern },
     config.rootDir,
-    config.gitIgnoreChecker
+    config.gitIgnoreChecker,
   );
-  
+
   return createSuccessResult(parsed.data, result);
 }
 
 function formatZodError(error: z.ZodError): string {
   return error.issues
-    .map(issue => `${issue.path.join('.')}: ${issue.message}`)
-    .join('; ');
+    .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+    .join("; ");
 }
