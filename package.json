@@ -1,6 +1,6 @@
 {
   "name": "tars-ai-cli",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "AI-powered CLI coding assistant",
   "bin": {
     "tars": "./dist/index.js"
