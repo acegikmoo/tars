@@ -6,11 +6,13 @@ import { loadConfig } from "./core/config";
 
 dotenv.config();
 
+const { version } = await import("../package.json");
+
 async function main() {
   program
     .name("tars")
     .description("AI-powered CLI coding assistant")
-    .version("0.1.0");
+    .version(version);
 
   program.action(async () => {
     const rootDir = process.cwd();

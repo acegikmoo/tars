@@ -37,7 +37,8 @@ NEW_VERSION=$(node -p "require('./package.json').version")
 echo "New version: $NEW_VERSION"
 
 echo "Pushing changes and tags..."
-git push origin main --tags
+git push origin main
+git push origin --tags
 
 echo "Done. GitHub Actions will publish to npm once the tag is pushed."
 echo "Track progress at: https://github.com/acegikmoo/tars/actions"
